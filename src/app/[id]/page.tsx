@@ -25,26 +25,7 @@ import {
 } from "@/components/ui/drawer";
 import { useParams } from "next/navigation";
 import { networkImages, tokenImages } from "@/lib/logos";
-
-function formatUsd(value: number | null | undefined) {
-  if (value == null) return "—";
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(2)}M`;
-  if (value >= 1_000) return `$${(value / 1_000).toFixed(2)}K`;
-  return `$${value.toFixed(2)}`;
-}
-
-function formatPct(value: number | null | undefined) {
-  if (value == null) return "—";
-  return `${(value * 100).toFixed(2)}%`;
-}
-
-function formatTokenAmount(raw: bigint | undefined, decimals: number) {
-  if (raw == null) return "—";
-  const formatted = Number(formatUnits(raw, decimals));
-  if (formatted >= 1_000_000) return `${(formatted / 1_000_000).toFixed(2)}M`;
-  if (formatted >= 1_000) return `${(formatted / 1_000).toFixed(2)}K`;
-  return formatted.toFixed(2);
-}
+import { formatTokenAmount, formatUsd, formatPct } from "@/lib/format";
 
 const sections = [
   { id: "share-price", label: "Share price" },
@@ -56,7 +37,7 @@ const sections = [
 export default function VaultPage() {
   const params = useParams();
   const address = params.id as string;
-  const { data: vault, isLoading, error } = useVaultV2Detail(address);
+  const { data: vault, error } = useVaultV2Detail(address);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const [activeSection, setActiveSection] = useState<string>(sections[0].id);
   const isScrollingRef = useRef(false);

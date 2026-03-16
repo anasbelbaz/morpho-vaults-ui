@@ -352,7 +352,10 @@ export function DepositForm({ vault }: { vault: VaultV2Detail }) {
           inputMode="decimal"
           placeholder="0.00"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => {
+            const v = e.target.value;
+            if (v === "" || /^\d*[.,]?\d*$/.test(v)) setAmount(v.replace(",", "."));
+          }}
           className="mb-2 w-full bg-transparent text-4xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground/30 disabled:opacity-50"
         />
         <div className="flex items-center justify-between text-sm text-muted-foreground">

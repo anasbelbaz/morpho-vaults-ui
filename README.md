@@ -1,6 +1,6 @@
 # Morpho Vaults UI
 
-A frontend for browsing and interacting with [Morpho](https://morpho.org) V2 vaults on Ethereum and Base.
+A frontend for browsing and interacting with [Morpho](https://morpho.org) V2 vaults on Ethereum.
 
 ## Features
 

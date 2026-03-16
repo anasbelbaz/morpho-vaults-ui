@@ -150,19 +150,23 @@ export function DepositForm({ vault }: { vault: VaultV2Detail }) {
     parsedAmount != null &&
     (allowance == null || allowance < parsedAmount);
 
-  const usdEstimate = useMemo(() => {
-    if (!parsedAmount || !vault.totalAssetsUsd) return 0;
-    const totalRaw = Number(vault.totalAssets ?? 0);
-    if (totalRaw === 0) return 0;
-    const ratio = vault.totalAssetsUsd / totalRaw;
-    return Number(parsedAmount) * ratio;
-  }, [parsedAmount, vault.totalAssetsUsd, vault.totalAssets]);
+  const usdPerUnit = useMemo(() => {
+    if (!vault.totalAssetsUsd || !vault.totalAssets) return 0;
+    const totalFormatted = Number(formatUnits(BigInt(String(vault.totalAssets)), decimals));
+    if (totalFormatted === 0) return 0;
+    return vault.totalAssetsUsd / totalFormatted;
+  }, [vault.totalAssetsUsd, vault.totalAssets, decimals]);
 
-  const projectedYearly = useMemo(() => {
-    if (!isDeposit) return 0;
-    if (!usdEstimate || !vault.avgNetApy) return 0;
-    return usdEstimate * vault.avgNetApy;
-  }, [usdEstimate, vault.avgNetApy, isDeposit]);
+  const usdEstimate = numericAmount * usdPerUnit;
+
+  const totalPositionAfter = isDeposit
+    ? formattedVaultBalance + numericAmount
+    : Math.max(formattedVaultBalance - numericAmount, 0);
+
+  const projectedYearly =
+    isDeposit && vault.avgNetApy
+      ? totalPositionAfter * usdPerUnit * vault.avgNetApy
+      : 0;
 
   const projectedMonthly = projectedYearly / 12;
 

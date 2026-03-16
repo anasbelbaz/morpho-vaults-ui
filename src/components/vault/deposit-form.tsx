@@ -304,20 +304,20 @@ export function DepositForm({ vault }: { vault: VaultV2Detail }) {
       (relevantRawBalance != null && parsedAmount > relevantRawBalance));
 
   const buttonLabel = !isConnected
-    ? "connect wallet"
+    ? "Connect wallet"
     : !parsedAmount
-      ? "enter an amount"
+      ? "Enter an amount"
       : relevantRawBalance != null && parsedAmount > relevantRawBalance
-        ? "insufficient balance"
+        ? "Insufficient balance"
         : sendCalls.isPending
-          ? "confirming…"
+          ? "Confirming…"
           : isWaiting
-            ? "waiting for confirmation…"
+            ? "Waiting for confirmation…"
             : isDeposit
               ? needsApproval
-                ? "approve & deposit"
-                : "deposit"
-              : "withdraw";
+                ? "Approve & Deposit"
+                : "Deposit"
+              : "Withdraw";
 
   const hasValue = numericAmount > 0;
 

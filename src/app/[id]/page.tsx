@@ -126,10 +126,12 @@ export default function VaultPage() {
                   </span>
                   {vault.asset.symbol && (
                     <span className="inline-flex items-center gap-1.5">
-                      <img
-                        src={tokenImages[vault.asset.symbol.toLowerCase()]}
-                        className="size-5 rounded-full"
-                      />
+                      {tokenImages[vault.asset.symbol.toLowerCase()] && (
+                        <img
+                          src={tokenImages[vault.asset.symbol.toLowerCase()]}
+                          className="size-5 rounded-full"
+                        />
+                      )}
                       {vault.asset.symbol}
                     </span>
                   )}

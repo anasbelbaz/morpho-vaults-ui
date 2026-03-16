@@ -152,7 +152,9 @@ export function DepositForm({ vault }: { vault: VaultV2Detail }) {
 
   const usdPerUnit = useMemo(() => {
     if (!vault.totalAssetsUsd || !vault.totalAssets) return 0;
-    const totalFormatted = Number(formatUnits(BigInt(String(vault.totalAssets)), decimals));
+    const totalFormatted = Number(
+      formatUnits(BigInt(String(vault.totalAssets)), decimals),
+    );
     if (totalFormatted === 0) return 0;
     return vault.totalAssetsUsd / totalFormatted;
   }, [vault.totalAssetsUsd, vault.totalAssets, decimals]);
@@ -358,7 +360,8 @@ export function DepositForm({ vault }: { vault: VaultV2Detail }) {
           value={amount}
           onChange={(e) => {
             const v = e.target.value;
-            if (v === "" || /^\d*[.,]?\d*$/.test(v)) setAmount(v.replace(",", "."));
+            if (v === "" || /^\d*[.,]?\d*$/.test(v))
+              setAmount(v.replace(",", "."));
           }}
           className="mb-2 w-full bg-transparent text-4xl font-semibold tracking-tight outline-none placeholder:text-muted-foreground/30 disabled:opacity-50"
         />
@@ -396,11 +399,13 @@ export function DepositForm({ vault }: { vault: VaultV2Detail }) {
 
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground flex items-center gap-2">
-              <img
-                src={tokenImages[symbol.toLowerCase()]}
-                alt={symbol}
-                className="size-4 rounded-full"
-              />
+              {tokenImages[symbol.toLowerCase()] && (
+                <img
+                  src={tokenImages[symbol.toLowerCase()]}
+                  alt={symbol}
+                  className="size-4 rounded-full"
+                />
+              )}
               Deposited ({symbol})
             </span>
             <FlipValue

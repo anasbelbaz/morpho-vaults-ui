@@ -21,8 +21,16 @@ export function VaultsTable() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const [filterByThreeF, setFilterByThreeF] = useState(true);
+  const [addressSearch, setAddressSearch] = useState("");
 
-  const addressIn = filterByThreeF ? THREE_F_VAULTS : [];
+  const trimmed = addressSearch.trim();
+  const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(trimmed);
+
+  const addressIn = isValidAddress
+    ? [trimmed]
+    : filterByThreeF
+      ? THREE_F_VAULTS
+      : [];
 
   const {
     data,
@@ -58,18 +66,28 @@ export function VaultsTable() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-2.5">
-        <Checkbox
-          id="filter-3f"
-          checked={filterByThreeF}
-          onCheckedChange={(checked) => setFilterByThreeF(checked === true)}
+      <div className="mb-4 flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-2.5">
+          <Checkbox
+            id="filter-3f"
+            checked={filterByThreeF}
+            disabled={isValidAddress}
+            onCheckedChange={(checked) => setFilterByThreeF(checked === true)}
+          />
+          <label
+            htmlFor="filter-3f"
+            className="cursor-pointer select-none text-sm font-medium"
+          >
+            filter by 3f.xyz vaults
+          </label>
+        </div>
+        <input
+          type="text"
+          placeholder="filter by vault address (0x…)"
+          value={addressSearch}
+          onChange={(e) => setAddressSearch(e.target.value)}
+          className="h-8 w-full max-w-xs rounded-lg border bg-background px-3 text-xs font-mono outline-none placeholder:text-muted-foreground/50 focus:border-primary sm:w-64"
         />
-        <label
-          htmlFor="filter-3f"
-          className="cursor-pointer select-none text-sm font-medium"
-        >
-          filter by 3f.xyz vaults
-        </label>
       </div>
 
       {isLoading ? (

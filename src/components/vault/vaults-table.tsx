@@ -15,6 +15,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { networkImages } from "@/lib/logos";
+import { isAddress } from "viem";
 
 export function VaultsTable() {
   const router = useRouter();
@@ -24,9 +25,8 @@ export function VaultsTable() {
   const [addressSearch, setAddressSearch] = useState("");
 
   const trimmed = addressSearch.trim();
-  const isValidAddress = /^0x[a-fA-F0-9]{40}$/.test(trimmed);
 
-  const addressIn = isValidAddress
+  const addressIn = isAddress(trimmed)
     ? [trimmed]
     : filterByThreeF
       ? THREE_F_VAULTS
@@ -71,7 +71,7 @@ export function VaultsTable() {
           <Checkbox
             id="filter-3f"
             checked={filterByThreeF}
-            disabled={isValidAddress}
+            disabled={isAddress(trimmed)}
             onCheckedChange={(checked) => setFilterByThreeF(checked === true)}
           />
           <label

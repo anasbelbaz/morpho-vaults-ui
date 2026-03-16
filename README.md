@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Morpho Vaults UI
+
+A frontend for browsing and interacting with [Morpho](https://morpho.org) V2 vaults on Ethereum and Base.
+
+## Features
+
+- Browse listed Morpho V2 vaults with infinite scroll
+- Filter by 3f.xyz curated vaults
+- Vault detail pages with share price chart, TVL, APY, and on-chain stats
+- Deposit & withdraw via ERC-4626 with batched transactions (EIP-5792)
+- Allowance-aware deposits (skips approve when not needed)
+- User deposit history chart and transaction tables
+- Wallet connection via ConnectKit
+- Dark/light mode with skeleton loading states
+- Responsive layout with mobile drawer for the deposit form
+
+## Tech Stack
+
+Next.js 16 · React 19 · Tailwind CSS 4 · shadcn/ui · Wagmi · Viem · ConnectKit · TanStack Query · Recharts · Zod · Framer Motion
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+cp .env.local.example .env.local   # add your keys
+bun install
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | yes | WalletConnect project ID |
+| `NEXT_PUBLIC_ALCHEMY_ID` | no | Alchemy API key (improves RPC reliability) |
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/              # next.js app router pages
+│   ├── page.tsx      # vault list
+│   └── [id]/         # vault detail
+├── components/
+│   ├── ui/           # shadcn primitives
+│   └── vault/        # vault-specific components
+├── hooks/            # data fetching & on-chain hooks
+└── lib/              # config, schemas, abis, utils
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Command | Description |
+|---|---|
+| `bun dev` | Start dev server |
+| `bun build` | Production build |
+| `bun lint` | Biome check |
+| `bun format` | Biome format |

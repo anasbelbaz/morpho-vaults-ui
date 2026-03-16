@@ -135,7 +135,8 @@ export function DepositForm({ vault }: { vault: VaultV2Detail }) {
     try {
       const n = Number.parseFloat(amount);
       if (Number.isNaN(n) || n <= 0) return null;
-      return parseUnits(amount, decimals);
+      const floored = Math.floor(n * 10 ** decimals) / 10 ** decimals;
+      return parseUnits(floored.toString(), decimals);
     } catch {
       return null;
     }
@@ -235,7 +236,7 @@ export function DepositForm({ vault }: { vault: VaultV2Detail }) {
 
   useEffect(() => {
     if (!callsStatus.isError) return;
-    toast.error("an error occurred");
+    toast.error("An error occurred");
     sendCalls.reset();
   }, [callsStatus.isError, sendCalls]);
 
@@ -288,7 +289,7 @@ export function DepositForm({ vault }: { vault: VaultV2Detail }) {
           experimental_fallback: true,
         },
         {
-          onError: () => toast.error("an error occurred"),
+          onError: () => toast.error("An error occurred"),
         },
       );
     }
@@ -465,7 +466,7 @@ export function DepositForm({ vault }: { vault: VaultV2Detail }) {
         onClick={isConnected ? handleSubmit : () => openConnectModal(true)}
       >
         {buttonLabel}{" "}
-        {sendCalls.isPending ? (
+        {sendCalls.isPending || isWaiting ? (
           <Loader2 className="size-4 animate-spin" />
         ) : null}
       </Button>

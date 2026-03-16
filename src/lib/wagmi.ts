@@ -1,5 +1,5 @@
 import { createConfig, fallback, http } from "wagmi";
-import { mainnet, base } from "wagmi/chains";
+import { mainnet } from "wagmi/chains";
 import { getDefaultConfig } from "connectkit";
 
 const alchemyId = process.env.NEXT_PUBLIC_ALCHEMY_ID;
@@ -22,7 +22,7 @@ const mainnetTransports = [
 
 export const config = createConfig(
   getDefaultConfig({
-    chains: [mainnet, base],
+    chains: [mainnet],
     transports: {
       [mainnet.id]: fallback(mainnetTransports),
     },

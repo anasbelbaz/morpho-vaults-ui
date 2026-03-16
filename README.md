@@ -33,7 +33,6 @@ Open [http://localhost:3000](http://localhost:3000).
 | Variable | Required | Description |
 |---|---|---|
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | yes | WalletConnect project ID |
-| `NEXT_PUBLIC_ALCHEMY_ID` | no | Alchemy API key (improves RPC reliability) |
 
 ## Project Structure
 

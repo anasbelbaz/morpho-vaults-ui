@@ -24,10 +24,10 @@ export function VaultsTable() {
   const [filterByThreeF, setFilterByThreeF] = useState(true);
   const [addressSearch, setAddressSearch] = useState("");
 
-  const trimmed = addressSearch.trim();
+  const isValidAddress = isAddress(addressSearch.trim());
 
-  const addressIn = isAddress(trimmed)
-    ? [trimmed]
+  const addressIn = isValidAddress
+    ? [addressSearch.trim()]
     : filterByThreeF
       ? THREE_F_VAULTS
       : [];
@@ -71,7 +71,7 @@ export function VaultsTable() {
           <Checkbox
             id="filter-3f"
             checked={filterByThreeF}
-            disabled={isAddress(trimmed)}
+            disabled={isValidAddress}
             onCheckedChange={(checked) => setFilterByThreeF(checked === true)}
           />
           <label

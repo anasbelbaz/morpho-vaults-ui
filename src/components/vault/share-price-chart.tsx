@@ -12,6 +12,7 @@ import {
 } from "recharts";
 
 import { useVaultHistory } from "@/hooks/vault/use-vault-history";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const periodOptions = [
   { label: "1W", days: 7 },
@@ -66,8 +67,12 @@ export function SharePriceChart({
       </div>
 
       {isLoading ? (
-        <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
-          loading chart…
+        <div className="h-[260px] space-y-3 pt-4">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-4/6" />
+          <Skeleton className="h-32 w-full rounded-lg" />
+          <Skeleton className="h-4 w-3/4" />
         </div>
       ) : !points?.length ? (
         <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">

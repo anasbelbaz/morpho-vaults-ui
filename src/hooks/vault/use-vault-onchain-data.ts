@@ -3,7 +3,8 @@ import type { Address } from "viem";
 
 import { erc4626Abi, erc20Abi } from "@/lib/abis";
 
-const REFETCH_INTERVAL = 10_000;
+const VAULT_REFETCH = 30_000;
+const USER_REFETCH = 10_000;
 
 export function useVaultOnchain(vaultAddress: Address, chainId: number) {
   const totalAssets = useReadContract({
@@ -11,7 +12,7 @@ export function useVaultOnchain(vaultAddress: Address, chainId: number) {
     abi: erc4626Abi,
     functionName: "totalAssets",
     chainId,
-    query: { refetchInterval: REFETCH_INTERVAL },
+    query: { staleTime: 15_000, refetchInterval: VAULT_REFETCH },
   });
 
   const totalSupply = useReadContract({
@@ -19,7 +20,7 @@ export function useVaultOnchain(vaultAddress: Address, chainId: number) {
     abi: erc4626Abi,
     functionName: "totalSupply",
     chainId,
-    query: { refetchInterval: REFETCH_INTERVAL },
+    query: { staleTime: 15_000, refetchInterval: VAULT_REFETCH },
   });
 
   return { totalAssets, totalSupply };
@@ -38,7 +39,8 @@ export function useUserBalance(
     chainId,
     query: {
       enabled: !!tokenAddress && !!userAddress,
-      refetchInterval: REFETCH_INTERVAL,
+      staleTime: USER_REFETCH,
+      refetchInterval: USER_REFETCH,
     },
   });
 }
@@ -56,7 +58,8 @@ export function useUserVaultPosition(
     chainId,
     query: {
       enabled: !!vaultAddress && !!userAddress,
-      refetchInterval: REFETCH_INTERVAL,
+      staleTime: USER_REFETCH,
+      refetchInterval: USER_REFETCH,
     },
   });
 
@@ -68,7 +71,8 @@ export function useUserVaultPosition(
     chainId,
     query: {
       enabled: !!vaultAddress && shares.data != null && shares.data > BigInt(0),
-      refetchInterval: REFETCH_INTERVAL,
+      staleTime: USER_REFETCH,
+      refetchInterval: USER_REFETCH,
     },
   });
 

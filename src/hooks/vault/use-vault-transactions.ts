@@ -1,7 +1,8 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { z } from "zod";
 
-const MORPHO_API = "https://api.morpho.org/graphql";
+import { graphqlQuery } from "@/lib/graphql-api";
+
 const PAGE_SIZE = 15;
 
 const transactionSchema = z.object({
@@ -58,20 +59,11 @@ async function fetchTransactions(
   skip: number,
   userAddress?: string,
 ) {
-  const res = await fetch(MORPHO_API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: buildQuery(vaultAddress, first, skip, userAddress),
-    }),
-  });
-
-  if (!res.ok) throw new Error(`morpho api error: ${res.status}`);
-
-  const json = await res.json();
-  const parsed = responseSchema.parse(json);
-
-  return parsed.data.vaultV2transactions.items;
+  const res = await graphqlQuery(
+    buildQuery(vaultAddress, first, skip, userAddress),
+    responseSchema,
+  );
+  return res.data.vaultV2transactions.items;
 }
 
 export function useVaultTransactions(
@@ -85,7 +77,8 @@ export function useVaultTransactions(
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) =>
       lastPage.length < PAGE_SIZE ? undefined : allPages.flat().length,
-    refetchInterval: 10_000,
+    // staleTime: 30_000,
+    refetchInterval: 30_000,
     enabled: !!vaultAddress,
   });
 }

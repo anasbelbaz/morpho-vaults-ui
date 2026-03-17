@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { vaultV2DetailResponseSchema } from "@/lib/schemas/vault-v2-detail";
-
-const MORPHO_API = "https://api.morpho.org/graphql";
+import { graphqlQuery } from "@/lib/graphql-api";
 
 function buildDetailQuery(address: string, chainId: number) {
   return `
@@ -51,27 +50,19 @@ function buildDetailQuery(address: string, chainId: number) {
 }
 
 async function fetchVaultV2Detail(address: string, chainId: number) {
-  const res = await fetch(MORPHO_API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query: buildDetailQuery(address, chainId) }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`morpho api error: ${res.status}`);
-  }
-
-  const json = await res.json();
-  const parsed = vaultV2DetailResponseSchema.parse(json);
-
-  return parsed.data.vaultV2ByAddress;
+  const res = await graphqlQuery(
+    buildDetailQuery(address, chainId),
+    vaultV2DetailResponseSchema,
+  );
+  return res.data.vaultV2ByAddress;
 }
 
 export function useVaultV2Detail(address: string, chainId = 1) {
   return useQuery({
     queryKey: ["vault-v2-detail", address, chainId],
     queryFn: () => fetchVaultV2Detail(address, chainId),
-    refetchInterval: 10_000,
+    // staleTime: 30_000,
+    refetchInterval: 30_000,
     enabled: !!address,
   });
 }

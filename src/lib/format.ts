@@ -19,3 +19,7 @@ export function formatTokenAmount(raw: bigint | undefined, decimals: number) {
   if (formatted >= 1_000) return `${(formatted / 1_000).toFixed(2)}K`;
   return formatted.toFixed(2);
 }
+
+export function truncateHash(hash: string) {
+  return `${hash.slice(0, 6)}…${hash.slice(-4)}`;
+}

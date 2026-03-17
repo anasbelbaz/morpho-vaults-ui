@@ -10,8 +10,10 @@ import {
   CartesianGrid,
 } from "recharts";
 import { useAccount } from "wagmi";
+import { ChevronLeft, Loader2 } from "lucide-react";
 
 import { useUserDepositHistory } from "@/hooks/vault/use-user-deposit-history";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function formatDate(timestamp: number) {
   return new Date(timestamp * 1000).toLocaleDateString("en-US", {
@@ -37,13 +39,10 @@ export function UserDepositChart({
   decimals: number;
 }) {
   const { address: userAddress, isConnected } = useAccount();
-  const { data: points, isLoading } = useUserDepositHistory(
-    vaultAddress,
-    userAddress,
-    decimals,
-  );
+  const { points, isLoading, hasMore, loadMore, isFetchingMore } =
+    useUserDepositHistory(vaultAddress, userAddress, decimals);
 
-  const currentBalance = points?.length ? points[points.length - 1].y : 0;
+  const currentBalance = points.length ? points[points.length - 1].y : 0;
 
   if (!isConnected) {
     return (
@@ -57,20 +56,41 @@ export function UserDepositChart({
 
   return (
     <div className="rounded-xl border p-6">
-      <div className="mb-4">
-        <p className="text-xs text-muted-foreground">
-          My Deposit ({assetSymbol})
-        </p>
-        <p className="text-2xl font-semibold">
-          {currentBalance.toFixed(5)} {assetSymbol}
-        </p>
+      <div className="mb-4 flex items-center justify-between">
+        <div>
+          <p className="text-xs text-muted-foreground">
+            My Deposit ({assetSymbol})
+          </p>
+          <p className="text-2xl font-semibold">
+            {formatBalance(currentBalance)} {assetSymbol}
+          </p>
+        </div>
+        {hasMore && (
+          <button
+            type="button"
+            onClick={() => loadMore()}
+            disabled={isFetchingMore}
+            className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground disabled:opacity-50"
+          >
+            {isFetchingMore ? (
+              <Loader2 className="size-3 animate-spin" />
+            ) : (
+              <ChevronLeft className="size-3" />
+            )}
+            load older
+          </button>
+        )}
       </div>
 
       {isLoading ? (
-        <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
-          loading chart…
+        <div className="h-[260px] space-y-3 pt-4">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-4 w-4/6" />
+          <Skeleton className="h-32 w-full rounded-lg" />
+          <Skeleton className="h-4 w-3/4" />
         </div>
-      ) : !points?.length ? (
+      ) : !points.length ? (
         <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
           no deposit history
         </div>

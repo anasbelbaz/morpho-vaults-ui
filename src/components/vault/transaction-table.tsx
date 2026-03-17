@@ -7,6 +7,7 @@ import { useAccount } from "wagmi";
 
 import { useVaultTransactions } from "@/hooks/vault/use-vault-transactions";
 import { tokenImages } from "@/lib/logos";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -51,14 +52,22 @@ function formatUsd(shares: string | number | null | undefined) {
 
 const ETHERSCAN_TX = "https://etherscan.io/tx/";
 
-export function UserTransactions({
-  vaultAddress,
-  assetSymbol,
-}: {
+interface TransactionTableProps {
   vaultAddress: string;
   assetSymbol: string;
-}) {
+  title: string;
+  userOnly?: boolean;
+}
+
+export function TransactionTable({
+  vaultAddress,
+  assetSymbol,
+  title,
+  userOnly = false,
+}: TransactionTableProps) {
   const { address: userAddress, isConnected } = useAccount();
+
+  const filterAddress = userOnly ? userAddress : undefined;
 
   const {
     data,
@@ -67,7 +76,7 @@ export function UserTransactions({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useVaultTransactions(vaultAddress, userAddress);
+  } = useVaultTransactions(vaultAddress, filterAddress);
 
   const txs = useMemo(() => data?.pages.flat() ?? [], [data]);
 
@@ -93,7 +102,7 @@ export function UserTransactions({
   const symbolKey = assetSymbol.toLowerCase();
   const tokenIcon = tokenImages[symbolKey];
 
-  if (!isConnected) {
+  if (userOnly && !isConnected) {
     return (
       <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
         connect your wallet to view your transactions
@@ -103,11 +112,30 @@ export function UserTransactions({
 
   return (
     <div>
-      <h2 className="mb-4 text-lg font-semibold">Your transactions</h2>
+      <h2 className="mb-4 text-lg font-semibold">{title}</h2>
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-          loading transactions…
+        <div className="rounded-xl border bg-background">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Date</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead className="text-right">Transaction</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="ml-auto h-4 w-28" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       ) : error ? (
         <div className="flex items-center justify-center py-16 text-sm text-destructive">

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 
-const MORPHO_API = "https://api.morpho.org/graphql";
+import { graphqlQuery } from "@/lib/graphql-api";
 
 const historyPointSchema = z.object({
   x: z.number(),
@@ -52,21 +52,12 @@ async function fetchHistory(address: string, chainId: number, days: number) {
   const start = now - days * 86400;
   const interval = days <= 7 ? "HOUR" : "DAY";
 
-  const res = await fetch(MORPHO_API, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      query: buildHistoryQuery(address, chainId, start, now, interval),
-    }),
-  });
+  const res = await graphqlQuery(
+    buildHistoryQuery(address, chainId, start, now, interval),
+    historyResponseSchema,
+  );
 
-  if (!res.ok) throw new Error(`morpho api error: ${res.status}`);
-
-  const json = await res.json();
-  const parsed = historyResponseSchema.parse(json);
-
-  const points = parsed.data.vaultV2ByAddress?.historicalState.sharePrice ?? [];
-
+  const points = res.data.vaultV2ByAddress?.historicalState.sharePrice ?? [];
   return points.sort((a, b) => a.x - b.x);
 }
 
@@ -74,7 +65,8 @@ export function useVaultHistory(address: string, chainId = 1, days = 30) {
   return useQuery({
     queryKey: ["vault-history", address, chainId, days],
     queryFn: () => fetchHistory(address, chainId, days),
-    refetchInterval: 10_000,
+    // staleTime: 120_000,
+    refetchInterval: 120_000,
     enabled: !!address,
   });
 }

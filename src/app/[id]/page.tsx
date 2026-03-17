@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowDownToLine, ChartCandlestick } from "lucide-react";
 import type { Address } from "viem";
@@ -10,8 +10,7 @@ import { useVaultV2Detail } from "@/hooks/vault/use-vault-v2-detail";
 import { useVaultOnchain } from "@/hooks/vault/use-vault-onchain-data";
 import { DepositForm } from "@/components/vault/deposit-form";
 import { SharePriceChart } from "@/components/vault/share-price-chart";
-import { VaultTransactions } from "@/components/vault/vault-transactions-table";
-import { UserTransactions } from "@/components/vault/user-transactions-table";
+import { TransactionTable } from "@/components/vault/transaction-table";
 import { UserDepositChart } from "@/components/vault/user-deposit-chart";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -46,6 +45,11 @@ export default function VaultPage() {
   const chainId = vault?.chain.id ?? 1;
 
   const { totalAssets, totalSupply } = useVaultOnchain(vaultAddr, chainId);
+
+  const handleTransactionComplete = useCallback(() => {
+    totalAssets.refetch();
+    totalSupply.refetch();
+  }, [totalAssets, totalSupply]);
 
   useEffect(() => {
     const els = Object.entries(sectionRefs.current).reduce<
@@ -244,9 +248,10 @@ export default function VaultPage() {
             }}
             className="mt-10 scroll-mt-14"
           >
-            <VaultTransactions
-              address={address}
+            <TransactionTable
+              vaultAddress={address}
               assetSymbol={vault?.asset.symbol ?? ""}
+              title="All transactions"
             />
           </div>
 
@@ -271,9 +276,11 @@ export default function VaultPage() {
             }}
             className="mt-10 scroll-mt-14"
           >
-            <UserTransactions
+            <TransactionTable
               vaultAddress={address}
               assetSymbol={vault?.asset.symbol ?? ""}
+              title="Your transactions"
+              userOnly
             />
           </div>
         </div>
@@ -282,7 +289,7 @@ export default function VaultPage() {
         <div className="hidden w-full shrink-0 lg:block lg:w-[340px]">
           <div className="lg:sticky lg:top-24">
             {vault ? (
-              <DepositForm vault={vault} />
+              <DepositForm vault={vault} onTransactionComplete={handleTransactionComplete} />
             ) : (
               <div className="space-y-3">
                 <Skeleton className="h-10 w-full rounded-xl" />
@@ -311,7 +318,7 @@ export default function VaultPage() {
           </DrawerHeader>
           <div className="overflow-y-auto px-4 pb-6">
             {vault ? (
-              <DepositForm vault={vault} />
+              <DepositForm vault={vault} onTransactionComplete={handleTransactionComplete} />
             ) : (
               <div className="space-y-3 py-4">
                 <Skeleton className="h-10 w-full rounded-xl" />

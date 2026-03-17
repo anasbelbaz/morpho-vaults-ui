@@ -1,22 +1,35 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { z } from "zod";
 import { formatUnits } from "viem";
 
-const MORPHO_API = "https://api.morpho.org/graphql";
+import { graphqlQuery } from "@/lib/graphql-api";
+
+const PAGE_SIZE = 30;
+
+const txDataSchema = z
+  .object({ assets: z.union([z.string(), z.number()]).transform(String) })
+  .nullable();
 
 const transactionSchema = z.object({
   type: z.string(),
-  shares: z.union([z.string(), z.number()]).nullable().optional(),
   timestamp: z.number(),
+  data: txDataSchema,
 });
 
 const responseSchema = z.object({
   data: z.object({
     vaultV2transactions: z.object({
       items: z.array(transactionSchema),
+      pageInfo: z.object({
+        countTotal: z.number(),
+        count: z.number(),
+      }),
     }),
   }),
 });
+
+type Transaction = z.infer<typeof transactionSchema>;
 
 function buildQuery(
   vaultAddress: string,
@@ -29,53 +42,47 @@ function buildQuery(
       vaultV2transactions(
         first: ${first},
         skip: ${skip},
-        where: { vaultAddress_in: "${vaultAddress}", userAddress_in: "${userAddress}" }
+        orderBy: Time,
+        orderDirection: Desc,
+        where: {
+          vaultAddress_in: "${vaultAddress}",
+          userAddress_in: "${userAddress}",
+          type_in: [Deposit, Withdraw]
+        }
       ) {
         items {
           type
-          shares
           timestamp
+          data {
+            ... on VaultV2DepositData { assets }
+            ... on VaultV2WithdrawData { assets }
+          }
+        }
+        pageInfo {
+          countTotal
+          count
         }
       }
     }
   `;
 }
 
-async function fetchAllUserTransactions(
+async function fetchPage(
   vaultAddress: string,
   userAddress: string,
+  skip: number,
 ) {
-  const PAGE = 100;
-  let skip = 0;
-  const allItems: z.infer<typeof transactionSchema>[] = [];
-
-  while (true) {
-    const res = await fetch(MORPHO_API, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: buildQuery(vaultAddress, userAddress, PAGE, skip),
-      }),
-    });
-
-    if (!res.ok) throw new Error(`morpho api error: ${res.status}`);
-
-    const json = await res.json();
-    const parsed = responseSchema.parse(json);
-    const items = parsed.data.vaultV2transactions.items;
-
-    allItems.push(...items);
-    if (items.length < PAGE) break;
-    skip += PAGE;
-  }
-
-  return allItems;
+  const res = await graphqlQuery(
+    buildQuery(vaultAddress, userAddress, PAGE_SIZE, skip),
+    responseSchema,
+  );
+  return res.data.vaultV2transactions;
 }
 
 export type DepositHistoryPoint = { x: number; y: number };
 
 function buildCumulativeBalance(
-  txs: z.infer<typeof transactionSchema>[],
+  txs: Transaction[],
   decimals: number,
 ): DepositHistoryPoint[] {
   const sorted = [...txs].sort((a, b) => a.timestamp - b.timestamp);
@@ -84,9 +91,9 @@ function buildCumulativeBalance(
   const points: DepositHistoryPoint[] = [];
 
   for (const tx of sorted) {
-    if (tx.shares == null) continue;
-    const raw = typeof tx.shares === "string" ? tx.shares : String(tx.shares);
-    const value = Number(formatUnits(BigInt(raw), decimals));
+    const assets = tx.data?.assets;
+    if (!assets) continue;
+    const value = Number(formatUnits(BigInt(assets), decimals));
 
     if (tx.type === "Deposit") {
       cumulative += value;
@@ -109,13 +116,32 @@ export function useUserDepositHistory(
   userAddress: string | undefined,
   decimals: number,
 ) {
-  return useQuery({
+  const query = useInfiniteQuery({
     queryKey: ["user-deposit-history", vaultAddress, userAddress],
-    queryFn: async () => {
-      const txs = await fetchAllUserTransactions(vaultAddress, userAddress!);
-      return buildCumulativeBalance(txs, 18);
+    queryFn: ({ pageParam = 0 }) =>
+      fetchPage(vaultAddress, userAddress!, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const fetched = allPages.reduce((n, p) => n + p.items.length, 0);
+      if (fetched >= lastPage.pageInfo.countTotal) return undefined;
+      return fetched;
     },
-    refetchInterval: 10_000,
     enabled: !!vaultAddress && !!userAddress,
+    // staleTime: 30_000,
+    refetchInterval: 30_000,
   });
+
+  const points = useMemo(() => {
+    const allTxs = query.data?.pages.flatMap((p) => p.items) ?? [];
+    if (allTxs.length === 0) return [];
+    return buildCumulativeBalance(allTxs, decimals);
+  }, [query.data, decimals]);
+
+  return {
+    points,
+    isLoading: query.isLoading,
+    hasMore: query.hasNextPage ?? false,
+    loadMore: query.fetchNextPage,
+    isFetchingMore: query.isFetchingNextPage,
+  };
 }
